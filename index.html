@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Wokwi Diagram Viewer</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jointjs/3.5.3/joint.min.css" />
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.3.3/backbone-min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jointjs/3.5.3/joint.min.js"></script>
+  <style>
+    #paper {
+      width: 100%;
+      height: 600px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <div id="paper"></div>
+  <script>
+    // 加载 diagram.json 文件
+    $.getJSON('diagram.json', function(data) {
+      // 创建 joint.dia.Graph 对象
+      var graph = new joint.dia.Graph();
+
+      // 解析 parts 数组
+      _.each(data.parts, function(part) {
+        // 创建 joint.dia.Element 对象
+        var element = new joint.shapes.standard.Rectangle({
+          id: part.id,
+          size: { width: 50, height: 50 },
+          attrs: {
+            rect: { fill: 'white', stroke: 'black' },
+            text: { text: part.type, fill: 'black' }
+          }
+        });
+
+        // 设置元件位置
+        element.translate(part.left, part.top);
+
+        // 添加元件到 graph 中
+        graph.addCell(element);
+      });
+
+      // 解析 connections 数组
+      _.each(data.connections, function(connection) {
+        // 创建 joint.dia.Link 对象
+        var link = new joint.dia.Link({
+          source: { id: connection[0] },
+          target: { id: connection[1] },
+          attrs: {
+            line: { stroke: connection[2], width: 2 },
+            label: { text: '', fill: 'black' }
+          }
+        });
+
+        // 设置连接线路径
+        link.vertices(_.map(connection[3], function(point) {
+          return { x: point[0], y: point[1] };
+        }));
+
+        // 添加连接线到 graph 中
+        graph.addCell(link);
+      });
+
+      // 创建 joint.dia.Paper 对象
+      var paper = new joint.dia.Paper({
+        el: $('#paper'),
+        width: 800,
+        height: 600,
+        gridSize: 10,
+        model: graph
+      });
+
+      // 渲染电路图
+      paper.render();
+    });
+  </script>
+</body>
+</html>
